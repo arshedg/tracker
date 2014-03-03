@@ -1,0 +1,7 @@
+distributed.WorkerFactory is the entry point to start the distributed system.
+
+Assumption: Mongodb.jar is in the class path and the articles are loaded to the db test.
+
+
+Once the system is started any client can connect to it.
+
