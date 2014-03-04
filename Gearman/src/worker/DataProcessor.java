@@ -11,19 +11,19 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.gearman.client.GearmanJobResult;
-import org.gearman.client.GearmanJobResultImpl;
-import org.gearman.worker.AbstractGearmanFunction;
+import org.gearman.Gearman;
+import org.gearman.GearmanFunction;
+import org.gearman.GearmanFunctionCallback;
+import org.gearman.GearmanWorker;
 
 /**
  *
  * @author marshed
  */
-public class DataProcessor extends AbstractGearmanFunction {
+public class DataProcessor implements GearmanFunction {
 
     private String article;
     private String articleId;
@@ -48,11 +48,23 @@ public class DataProcessor extends AbstractGearmanFunction {
         }
         return result;
     }
+    public static void main(String arg[]){
+         Gearman gearman = Gearman.createGearman();
+                
+                /** Create a gearman worker */
+                GearmanWorker worker = gearman.createGearmanWorker();
+                
+                /** Tell the worker how to perform the echo function */
+                worker.addFunction("NLP", new DataProcessor());
+                
+                /** Add a server to communicate with to the worker */
+                worker.addServer(gearman.createGearmanServer("localhost", 4567));
+    }
+    
 
     @Override
-    public GearmanJobResult executeFunction() {
-        try {
-            String request = new String((byte[]) this.data);
+    public byte[] work(String function, byte[] data, GearmanFunctionCallback callback) throws Exception {
+            String request = new String((byte[]) data);
             int border = request.indexOf(":");//first index of :
             this.article = request.substring(border + 1);
             this.articleId = request.substring(0, border);
@@ -63,15 +75,8 @@ public class DataProcessor extends AbstractGearmanFunction {
             String logText = "Article ID:" + articleId + ",time taken:" + timeTaken;
             int nerCount = nerResult.size();
             String ners = nerResult.toString();
-            String resultString = "  Number of NERs = " + nerCount + " NER :" + ners;
-
-            GearmanJobResult gjr = new GearmanJobResultImpl(this.jobHandle,
-                    true, resultString.getBytes(),
-                    new byte[0], new byte[0], 0, 0);
-            return gjr;
-        } catch (Exception ex) {
-            Logger.getLogger(DataProcessor.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
+            String resultString =logText+ "  Number of NERs = " + nerCount + " NER :" + ners;
+            System.out.println(resultString);
+            return resultString.getBytes("UTF-8");
     }
 }
