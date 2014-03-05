@@ -69,7 +69,7 @@ public class DataProcessor implements GearmanFunction {
             this.article = request.substring(border + 1);
             this.articleId = request.substring(0, border);
             long startTime = System.currentTimeMillis();
-            List<String> nerResult = this.doJob();
+            List<String> nerResult =this.doJob();
             long finishTime = System.currentTimeMillis();
             long timeTaken = finishTime - startTime;
             String logText = "Article ID:" + articleId + ",time taken:" + timeTaken;
